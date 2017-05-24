@@ -37,21 +37,21 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-extern xSemaphoreHandle zeroCross;
-extern uint16_t buffer[DMA_BUFFER_SIZE];
+extern xQueueHandle semistorCompareQueue;
 extern uint8_t transmitBuffer[32];
-ushort firstDma = 1;
-ushort itCompare3Enable = 0;
-ushort itCompare4Enable = 0;
-float powerPrecent = 30;
-float power = (1.0 - 0.01 * 30) / 2;
+ushort updateCompilet = 0;
+int impulsShift = 700;
+int maxShift = 900;
+int minShift = 30;
+int period = 1000;
 extern UART_HandleTypeDef huart1;
 
 void sendUart(uint8_t *pData, uint16_t Size);
+void StartCompare(void);
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_tim2_ch2_ch4;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
@@ -181,83 +181,24 @@ void EXTI2_IRQHandler(void)
   /* USER CODE END EXTI2_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
   /* USER CODE BEGIN EXTI2_IRQn 1 */
-	powerPrecent += 10;
-	if (powerPrecent >= 100) powerPrecent = 10;
-	power = (1.0 - 0.01 * powerPrecent) / 2;
+	for (int i = 0; i < 2000; i++)
+	{
+		
+	}
+	if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2))
+	{
+	impulsShift -= 100;
+	if (impulsShift <= minShift) impulsShift = maxShift;
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+		for(int i = 0 ; i < 20000 ; i++)
+		{
+		
+		}
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+	}
+
   /* USER CODE END EXTI2_IRQn 1 */
-}
-
-/**
-* @brief This function handles DMA1 channel7 global interrupt.
-*/
-void DMA1_Channel7_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim2_ch2_ch4);
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
-	int t = 0;
-	int curId = hdma_tim2_ch2_ch4.Instance->CNDTR - 1;
-	int lastId = DMA_BUFFER_SIZE  - hdma_tim2_ch2_ch4.Instance->CNDTR;
-	if (firstDma == 1)
-	{
-		firstDma = 0;
-		return;
-	}
-
-	if (buffer[curId] > buffer[lastId])
-	{
-		t = buffer[curId] - buffer[lastId];
-	}
-	else
-	{
-		t = buffer[curId] + htim2.Init.Period + 1 - buffer[lastId];
-	}
-
-
-	int newCompare = buffer[curId] + t + t * power;
-	if (newCompare > htim2.Init.Period)
-	{
-		newCompare -= htim2.Init.Period;
-		while (__HAL_TIM_GET_COUNTER(&htim2) >= newCompare)
-		{
-			
-		}
-	}
-	while (itCompare3Enable)
-	{
-			
-	}
-	if (newCompare > (int)__HAL_TIM_GET_COUNTER(&htim2) )
-	{
-		itCompare3Enable = 1;
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, newCompare);
-	}
-
-//		sprintf((char*)transmitBuffer, "%d, %d, t %d, n %d\r\n", buffer[curId], buffer[lastId], t, newCompare);
-//		sendUart(transmitBuffer, 64);
-
-	newCompare = newCompare + t / 2;
-	if (newCompare > htim2.Init.Period)
-	{
-		newCompare -= htim2.Init.Period;
-		while (__HAL_TIM_GET_COUNTER(&htim2) >= newCompare)
-		{
-			
-		}
-	}
-	while (itCompare4Enable)
-	{
-			
-	}
-	if (newCompare > (int)__HAL_TIM_GET_COUNTER(&htim2) )
-	{
-		itCompare4Enable = 1;
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, newCompare);
-	}
-
-  /* USER CODE END DMA1_Channel7_IRQn 1 */
 }
 
 /**
@@ -266,42 +207,79 @@ void DMA1_Channel7_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-  
+	int curentCounter = __HAL_TIM_GET_COUNTER(&htim2);
+	if (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC2) != RESET)
+	{
+		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_CC2) != RESET)
+		{
+			uint32_t newCompare = 0;
+
+			BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+
+			while (xQueueReceiveFromISR(semistorCompareQueue, &newCompare, &pxHigherPriorityTaskWoken)) {}
+			
+			newCompare = curentCounter +  impulsShift;
+	
+			if (newCompare > htim2.Init.Period)
+			{
+				newCompare -= htim2.Init.Period;
+			}
+			xQueueSendFromISR(semistorCompareQueue, &newCompare, &pxHigherPriorityTaskWoken);
+
+			newCompare = newCompare + period;
+			if (newCompare > htim2.Init.Period)
+			{
+				newCompare -= htim2.Init.Period;
+			}
+			xQueueSendFromISR(semistorCompareQueue, &newCompare, &pxHigherPriorityTaskWoken);
+
+			StartCompare();
+		}
+	}
 
 	if (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC3) != RESET)
 	{
-		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_CC3) != RESET && itCompare3Enable)
+		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_CC3) != RESET)
 		{
-//			sprintf((char*)transmitBuffer, "cnt3. %d\r\n", (int)__HAL_TIM_GET_COUNTER(&htim2));
-//			sendUart(transmitBuffer, 64);
+			StartCompare();
 
-			itCompare3Enable = 0;
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-			for (int i = 0; i < 500; i++)
+			int newCompare = curentCounter +  60;
+	
+			if (newCompare >= htim2.Init.Period)
 			{
+				for (int i = 0; i < 500; i++)
+				{
 				
+				}
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 			}
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+			else
+			{
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, newCompare);
+			}
 
 		}
 	}
 
 	if (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC4) != RESET)
 	{
-		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_CC4) != RESET && itCompare4Enable)
+		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_CC4) != RESET)
 		{
-//			sprintf((char*)transmitBuffer, "cnt4. %d\r\n", (int)__HAL_TIM_GET_COUNTER(&htim2));
-//			sendUart(transmitBuffer, 64);
-
-			itCompare4Enable = 0;
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-			for (int i = 0; i < 500; i++)
-			{
-				
-			}
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 		}
 	}
+
+	if (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_UPDATE) != RESET)
+	{
+		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_UPDATE) != RESET)
+		{
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
+			updateCompilet = 1;
+			StartCompare();
+		}
+	}
+
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
@@ -334,6 +312,29 @@ void sendUart(uint8_t *pData, uint16_t Size)
 	}
 }
 
+void StartCompare(void)
+{
+	if (uxQueueMessagesWaitingFromISR(semistorCompareQueue) > 0)
+	{
+		BaseType_t pxHigherPriorityTaskWoken = pdFALSE; 
+
+		uint32_t newCompare = 0;
+		if (xQueueReceiveFromISR(semistorCompareQueue, &newCompare, &pxHigherPriorityTaskWoken) == pdPASS)
+		{
+			if (newCompare > (uint32_t)__HAL_TIM_GET_COUNTER(&htim2))
+			{
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, newCompare);
+			}
+			else if(updateCompilet == 0)
+			{
+				xQueueSendToFrontFromISR(semistorCompareQueue, &newCompare, &pxHigherPriorityTaskWoken);
+//				sprintf((char*)transmitBuffer, "cnt. %d, n %d\r\n", (int)__HAL_TIM_GET_COUNTER(&htim2), (int)newCompare);
+//				sendUart(transmitBuffer, 64);
+			}
+		}
+	}
+	updateCompilet = 0;
+}
 //static BaseType_t xHigherPriorityTaskWoken;
 //xHigherPriorityTaskWoken = pdFALSE;
 //xSemaphoreGiveFromISR(zeroCross, &xHigherPriorityTaskWoken);

@@ -44,8 +44,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
-extern DMA_HandleTypeDef hdma_tim2_ch2_ch4;
-
 extern void Error_Handler(void);
 /* USER CODE BEGIN 0 */
 
@@ -108,28 +106,8 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef* htim_ic)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* Peripheral DMA init*/
-  
-    hdma_tim2_ch2_ch4.Instance = DMA1_Channel7;
-    hdma_tim2_ch2_ch4.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_tim2_ch2_ch4.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_tim2_ch2_ch4.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_tim2_ch2_ch4.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_tim2_ch2_ch4.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_tim2_ch2_ch4.Init.Mode = DMA_CIRCULAR;
-    hdma_tim2_ch2_ch4.Init.Priority = DMA_PRIORITY_HIGH;
-    if (HAL_DMA_Init(&hdma_tim2_ch2_ch4) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    /* Several peripheral DMA handle pointers point to the same DMA handle.
-     Be aware that there is only one channel to perform all the requested DMAs. */
-    __HAL_LINKDMA(htim_ic,hdma[TIM_DMA_ID_CC2],hdma_tim2_ch2_ch4);
-    __HAL_LINKDMA(htim_ic,hdma[TIM_DMA_ID_CC4],hdma_tim2_ch2_ch4);
-
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM2_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* USER CODE BEGIN TIM2_MspInit 1 */
 
@@ -198,10 +176,6 @@ void HAL_TIM_IC_MspDeInit(TIM_HandleTypeDef* htim_ic)
     PA1     ------> TIM2_CH2 
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
-
-    /* Peripheral DMA DeInit*/
-    HAL_DMA_DeInit(htim_ic->hdma[TIM_DMA_ID_CC2]);
-    HAL_DMA_DeInit(htim_ic->hdma[TIM_DMA_ID_CC4]);
 
     /* Peripheral interrupt DeInit*/
     HAL_NVIC_DisableIRQ(TIM2_IRQn);

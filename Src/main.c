@@ -52,7 +52,6 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-DMA_HandleTypeDef hdma_tim2_ch2_ch4;
 
 UART_HandleTypeDef huart1;
 
@@ -60,10 +59,7 @@ osThreadId defaultTaskHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-osThreadId semisterTaskHandle;
-xSemaphoreHandle zeroCross;
-
-uint16_t buffer[DMA_BUFFER_SIZE];
+xQueueHandle semistorCompareQueue;
 
 uint8_t transmitBuffer[64];
 /* USER CODE END PV */
@@ -72,7 +68,6 @@ uint8_t transmitBuffer[64];
 void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM3_Init(void);
@@ -83,7 +78,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void StartSemisterOnTask(void const * argument);
 
 /* USER CODE END PFP */
 
@@ -108,20 +102,20 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
 
   /* USER CODE BEGIN 2 */
-	//HAL_TIM_Base_Start_IT(&htim2);
+	semistorCompareQueue = xQueueCreate(2, sizeof(uint32_t));
+
+	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_TIM_Base_Start(&htim3);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 	HAL_TIM_OC_Start_IT(&htim2, TIM_CHANNEL_3);
 	HAL_TIM_OC_Start_IT(&htim2, TIM_CHANNEL_4);
 
-	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_2, (uint32_t*)buffer, DMA_BUFFER_SIZE);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -131,7 +125,6 @@ int main(void)
   /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
 	//vSemaphoreCreateBinary(zeroCross);
-	zeroCross = xSemaphoreCreateCounting(10, 0);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -145,8 +138,6 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
 	  /* add threads, ... */
-	osThreadDef(semisterOnTask, StartSemisterOnTask, osPriorityNormal, 0, 128);
-	semisterTaskHandle = osThreadCreate(osThread(semisterOnTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -328,21 +319,6 @@ static void MX_USART1_UART_Init(void)
 
 }
 
-/** 
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void) 
-{
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
-
-}
-
 /** Configure pins as 
         * Analog 
         * Input 
@@ -375,27 +351,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 7, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
-void StartSemisterOnTask(void const * argument)
-{
-	int i = 0;
-	for (;;)
-	{
-		xSemaphoreTake(zeroCross, portMAX_DELAY);
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-		osDelay(6);
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-		osDelay(1);
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-	}
 
-}
 /* USER CODE END 4 */
 
 /* StartDefaultTask function */
@@ -406,10 +368,10 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
 	for (;;)
 	{
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 		osDelay(500);
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-		osDelay(500);
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//		osDelay(500);
 	}
   /* USER CODE END 5 */ 
 }
