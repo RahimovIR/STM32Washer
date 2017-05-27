@@ -308,6 +308,9 @@
     <ClInclude Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h">
       <Filter>Header files\Device-specific files\FreeRTOS</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\leds.h">
+      <Filter>Source files\Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\freertos.c">
@@ -483,6 +486,9 @@
     </ClCompile>
     <ClCompile Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\FreeRTOS\Source\portable\MemMang\heap_4.c">
       <Filter>Source files\Device-specific files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\leds.c">
+      <Filter>Source files\Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

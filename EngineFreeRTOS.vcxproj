@@ -145,6 +145,7 @@
     <ClInclude Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_sdmmc.h" />
     <ClInclude Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h" />
     <ClInclude Include="Inc\FreeRTOSConfig.h" />
+    <ClInclude Include="Inc\leds.h" />
     <ClInclude Include="Inc\main.h" />
     <ClInclude Include="Inc\stm32f1xx_hal_conf.h" />
     <ClInclude Include="Inc\stm32f1xx_it.h" />
@@ -204,6 +205,7 @@
     <ClCompile Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_sdmmc.c" />
     <ClCompile Include="C:\Users\user\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_usb.c" />
     <ClCompile Include="Src\freertos.c" />
+    <ClCompile Include="Src\leds.c" />
     <ClCompile Include="Src\main.c" />
     <ClCompile Include="Src\stm32f1xx_hal_msp.c" />
     <ClCompile Include="Src\stm32f1xx_it.c" />

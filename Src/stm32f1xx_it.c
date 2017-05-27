@@ -37,6 +37,15 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
+#include "leds.h"
+
+
+extern void SwitchOnLD(Led_t led);
+extern void SwitchOffLD(Led_t led);
+extern void ToggleLD(Led_t led);
+
+Led_t curLedOn = LD_1;
+
 extern xQueueHandle semistorCompareQueue;
 extern uint8_t transmitBuffer[32];
 ushort updateCompilet = 0;
@@ -53,7 +62,6 @@ void StartCompare(void);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim3;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -195,7 +203,44 @@ void EXTI2_IRQHandler(void)
 		
 		}
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+		
+		switch (curLedOn)
+		{
+		case LD_1:
+			SwitchOffLD(LD_1);
+			SwitchOnLD(LD_3);
+			curLedOn = LD_3;
+			break;
+		case LD_3:
+			SwitchOffLD(LD_3);
+			SwitchOnLD(LD_4);
+			curLedOn = LD_4;
+			break;
+		case LD_4:
+			SwitchOffLD(LD_4);
+			SwitchOnLD(LD_8);
+			curLedOn = LD_8;
+			break;
+		case LD_8:
+			SwitchOffLD(LD_8);
+			SwitchOnLD(LD_9);
+			curLedOn = LD_9;
+			break;
+		case LD_9:
+			SwitchOffLD(LD_9);
+			SwitchOnLD(LD_10);
+			curLedOn = LD_10;
+			break;
+		case LD_10:
+			SwitchOffLD(LD_10);
+			SwitchOnLD(LD_1);
+			curLedOn = LD_1;
+			break;
+		default:
+			break;
+		}
 
+		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
 	}
 
   /* USER CODE END EXTI2_IRQn 1 */
@@ -274,7 +319,6 @@ void TIM2_IRQHandler(void)
 	{
 		if (__HAL_TIM_GET_IT_SOURCE(&htim2, TIM_IT_UPDATE) != RESET)
 		{
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
 			updateCompilet = 1;
 			StartCompare();
 		}
@@ -285,20 +329,6 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
-}
-
-/**
-* @brief This function handles TIM3 global interrupt.
-*/
-void TIM3_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM3_IRQn 0 */
-
-  /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
-  /* USER CODE BEGIN TIM3_IRQn 1 */
-
-  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
