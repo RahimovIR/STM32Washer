@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stm32f1xx_hal.h"
-#include "cmsis_os.h"
 
 #define LD_1_GROUND_PIN GPIO_PIN_15
 #define LD_1_GROUND_PORT GPIOC

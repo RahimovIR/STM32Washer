@@ -311,6 +311,9 @@
     <ClInclude Include="Inc\leds.h">
       <Filter>Source files\Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\buttons.h">
+      <Filter>Source files\Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\freertos.c">
@@ -488,6 +491,9 @@
       <Filter>Source files\Device-specific files\FreeRTOS</Filter>
     </ClCompile>
     <ClCompile Include="Src\leds.c">
+      <Filter>Source files\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\buttons.c">
       <Filter>Source files\Src</Filter>
     </ClCompile>
   </ItemGroup>
