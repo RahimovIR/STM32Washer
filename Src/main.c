@@ -49,6 +49,7 @@
 //#define configSUPPORT_DYNAMIC_ALLOCATION  1
 #include "leds.h"
 #include "buttons.h"
+#include "engine.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,7 +64,8 @@ osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 xQueueHandle semistorCompareQueue;
-
+osThreadId handleMainButtonTask;
+osThreadId handleMainEngineTask;
 uint8_t transmitBuffer[64];
 /* USER CODE END PV */
 
@@ -141,7 +143,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
 	  /* add threads, ... */
 	osThreadDef(mainButtonTask, StartMainButtonTask, osPriorityNormal, 0, 128);
-	osThreadCreate(osThread(mainButtonTask), &hadc2);
+	handleMainButtonTask = osThreadCreate(osThread(mainButtonTask), &hadc2);
+
+	osThreadDef(mainEngineTask, StartMainEngineTask, osPriorityNormal, 0, 128);
+	handleMainEngineTask = osThreadCreate(osThread(mainEngineTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -350,7 +355,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
@@ -361,8 +366,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  /*Configure GPIO pins : PA0 PA4 PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

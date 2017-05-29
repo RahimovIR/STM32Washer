@@ -314,6 +314,9 @@
     <ClInclude Include="Inc\buttons.h">
       <Filter>Source files\Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\engine.h">
+      <Filter>Source files\Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\freertos.c">
@@ -494,6 +497,9 @@
       <Filter>Source files\Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\buttons.c">
+      <Filter>Source files\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Inc\engine.c">
       <Filter>Source files\Src</Filter>
     </ClCompile>
   </ItemGroup>

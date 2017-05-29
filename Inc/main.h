@@ -53,6 +53,8 @@
 
 /* USER CODE BEGIN Private defines */
 #define DMA_BUFFER_SIZE 2
+
+
 /* USER CODE END Private defines */
 
 /**

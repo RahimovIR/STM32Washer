@@ -10,6 +10,16 @@ typedef enum
 	BUTTON_NO = 255
 } Button_t;
 
-//u_int8_t buttonPress = BUTTON_NO;
+typedef enum
+{
+	SHORT_CLICK,
+	LONG_CLICK
+} ButtonAction_t;
+
+struct
+{
+	Button_t pressButton;
+	ButtonAction_t action;
+} buttonNotyfiParametrs;
 
 void StartMainButtonTask(void const * argument);

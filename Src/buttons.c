@@ -15,8 +15,10 @@
 #define BUTTON_6_VAL_MIN	1100
 #define BUTTON_6_VAL_MAX	1200
 
-void ProcessQuickPress(Button_t button);
+void ProcessPress(void);
 Button_t GetCurentButton(ADC_HandleTypeDef* hadc);
+
+extern osThreadId handleMainEngineTask;
 
 Button_t lastPress = BUTTON_NO;
 
@@ -58,13 +60,18 @@ void StartMainButtonTask(void const * argument)
 			{
 				processState = UP;
 				time = 0;
-				ProcessQuickPress(processButton);
+				buttonNotyfiParametrs.pressButton = processButton;
+				buttonNotyfiParametrs.action = SHORT_CLICK;
+				ProcessPress();
 				continue;
 			}
 			if (time > 20)
 			{
 				processState = AL;
 				time = 0;
+				buttonNotyfiParametrs.pressButton = processButton;
+				buttonNotyfiParametrs.action = LONG_CLICK;
+				ProcessPress();
 				continue;
 			}
 			time++;
@@ -112,8 +119,10 @@ Button_t GetCurentButton(ADC_HandleTypeDef* hadc)
 
 }
 
-void ProcessQuickPress(Button_t button)
+void ProcessPress(void)
 {
+	xTaskNotifyGive(handleMainEngineTask);
+	Button_t button = buttonNotyfiParametrs.pressButton;
 	switch (button)
 	{
 	case BUTTON_START:
