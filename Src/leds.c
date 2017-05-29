@@ -131,8 +131,8 @@ void SwitchOffLed(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, Led_t led)
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
 	ledStatus = ledStatus & mask;
 
-	u_int16_t mask1g = 0b000111;
-	u_int16_t mask2g = 0b111000;
+	u_int16_t mask1g = 0b0000001101;
+	u_int16_t mask2g = 0b1110000000;
 	if ((ledStatus & mask1g) == 0)
 	{
 		HAL_GPIO_WritePin(LD_1_GROUND_PORT, LD_1_GROUND_PIN, GPIO_PIN_SET);
